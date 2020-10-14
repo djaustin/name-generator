@@ -10,8 +10,14 @@ import (
 
 // NameGenerator exposes methods to seed and generate names
 type NameGenerator interface {
+	// SeedData takes a slice of names and a variant indentifier and seeds a Markov chain with the name data
 	SeedData(variant string, names []string)
+
+	//GenerateName returns a randomly generated for a particular variant seeded with SeedData
 	GenerateName(variant string) (string, error)
+
+	// Variants returns a slice of available name variants
+	Variants() []string
 }
 
 // New creates a new empty NameGenerator with no seed data
@@ -86,13 +92,23 @@ func (c chain) markovName() string {
 func (g generator) GenerateName(variant string) (string, error) {
 	chain, ok := g.chains[variant]
 	if !ok {
-		return "", fmt.Errorf("Unable to generate name of type %s, no sample data exists", variant)
+		return "", fmt.Errorf("unable to generate name of type %s: no sample data exists", variant)
 	}
 	return chain.markovName(), nil
 }
 
 type generator struct {
 	chains map[string]chain
+}
+
+func (g *generator) Variants() []string {
+	variants := make([]string, len(g.chains))
+	i := 0
+	for k := range g.chains {
+		variants[i] = k
+		i++
+	}
+	return variants
 }
 
 func (g *generator) SeedData(label string, names []string) {
